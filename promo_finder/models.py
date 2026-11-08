@@ -19,7 +19,7 @@ import requests
 
 PRESETS = {
     "gemini":     {"api": "openai", "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-                   "model": "gemini-3.5-flash", "key_env": "GEMINI_API_KEY"},
+                   "model": "gemini-3.8-flash", "key_env": "GEMINI_API_KEY"},
     "groq":       {"api": "openai", "base_url": "https://api.groq.com/openai/v1",
                    "model": "llama-3.3-70b-versatile", "key_env": "GROQ_API_KEY"},
     "openrouter": {"api": "openai", "base_url": "https://openrouter.ai/api/v1",

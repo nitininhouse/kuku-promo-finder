@@ -21,6 +21,21 @@ episodes/*.txt ─► 1 parse (code) ─► 2 find (LLM) ─► 3 check (code) �
 | 5 Re-rank | same judge | Swiss tournament + Bradley-Terry on the top 24, because absolute scores bunch at the top. Reports position bias. |
 | Rank | code | Removes overlapping picks, spaces episodes out, gives early episodes a small boost (new viewers start at episode 1). |
 
+## Results on the full 50-episode pack
+
+Three answer keys nobody tuned on (`eval/`):
+
+| Answer key | Keyword baseline | Promo Finder (default) |
+|---|---|---|
+| 8 promos marked blind (card IDs) | 1/8 | **8/8** |
+| Kuku's own episode titles: titled moment inside a pick | 20/45 | **42/45** |
+| 21 real YouTube Shorts promos of the show (by transcript) | 10/21 | **21/21** (100% of views) |
+
+Plus 20 paid Meta Ad Library creatives for the show (`eval/meta_ads.csv`): their most-used openings
+(episode-18 fire, episode-3 wedding expulsion) are the #1 picks of our DeepSeek-only and default runs.
+
+Scoring: `python -m promo_finder.evaluate`, `python -m promo_finder.eval_titles`, `python -m promo_finder.eval_real`.
+
 ## Run
 
 ```bash
@@ -41,6 +56,14 @@ One block in `config.toml`:
 [finder]
 provider = "deepseek"        # deepseek | gemini | groq | openrouter | ollama | anthropic | baseline
 model = "deepseek-flash"
+
+[[extra_finders]]            # optional: pool a second model's candidates
+provider = "gemini"
+model = "gemini-3.8-flash"
+
+[scorer.llm]                 # the judge: a different family from the finder
+provider = "gemini"
+model = "gemini-3.8-flash"
 # base_url = "https://your-gateway/v1"   # any OpenAI-compatible API
 ```
 

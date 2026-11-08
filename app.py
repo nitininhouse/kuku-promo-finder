@@ -44,10 +44,26 @@ with st.sidebar:
     else:
         cfg["finder"] = {"provider": "baseline"}
     st.header("Judge")
-    judge = st.selectbox("Scorer", ["jev", "llm", "heuristic"],
-                         help="jev = TypeSafe Jev probability scores; llm = same rubric via the finder model")
+    judge = st.selectbox("Scorer", ["llm", "jev", "heuristic"],
+                         help="llm = rubric + head-to-head via a judge model; jev = TypeSafe Jev probability "
+                              "scores; heuristic = keyword rules, no key")
     cfg["scorer"]["judge"] = judge
-    if judge == "jev":
+    cfg.pop("extra_finders", None)  # the app runs one finder; the CLI config can pool several
+    if judge == "llm":
+        same = st.checkbox("Use the finder model as judge", value=False,
+                           help="Better: a judge from a different model family (it won't favour its own picks)")
+        if same or provider == "baseline":
+            cfg["scorer"]["llm"] = cfg["finder"] if provider != "baseline" else None
+            if provider == "baseline":
+                cfg["scorer"]["judge"] = "heuristic"
+        else:
+            jp = st.selectbox("Judge model provider", [k for k in PRESETS if PRESETS[k]["api"] == "openai"] + ["anthropic"],
+                              index=list(PRESETS).index("gemini"))
+            cfg["scorer"]["llm"] = {"provider": jp, "model": st.text_input("Judge model", PRESETS[jp]["model"]),
+                                    "api_key": st.text_input(f"Judge API key ({PRESETS[jp]['key_env']})", type="password",
+                                                             value=secret(PRESETS[jp]["key_env"])),
+                                    "workers": 4}
+    elif judge == "jev":
         cfg["scorer"]["api_key"] = st.text_input("TypeSafe API key", type="password",
                                                  value=secret("TYPESAFE_API_KEY"))
     st.caption("Keys stay in this browser session and are never written to disk.")
