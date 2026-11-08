@@ -1,4 +1,4 @@
-# Promo Finder
+# CliffCut
 
 Reads a microdrama screenplay and finds 20-60 second promo clips: a hook in the first 3 seconds,
 a cliffhanger at the cut, and a story a stranger can follow. Built for Kuku's AI Generalist
@@ -25,7 +25,7 @@ episodes/*.txt ─► 1 parse (code) ─► 2 find (LLM) ─► 3 check (code) �
 
 Three answer keys nobody tuned on (`eval/`):
 
-| Answer key | Keyword baseline | Promo Finder (default) |
+| Answer key | Keyword baseline | CliffCut (default) |
 |---|---|---|
 | 8 promos marked blind (card IDs) | 1/8 | **8/8** |
 | Kuku's own episode titles: titled moment inside a pick | 20/45 | **42/45** |
