@@ -213,7 +213,7 @@ with tabs[0]:
             with cols[i % 2]:
                 st.markdown(card(c), unsafe_allow_html=True)
                 with st.expander("Screenplay of this cut"):
-                    st.code(c["text"], language=None)
+                    st.code(c["text"], language=None, wrap_lines=True)
 
 with tabs[1]:
     if not res:
@@ -242,17 +242,18 @@ with tabs[2]:
 
 with tabs[3]:
     st.markdown("#### Tested on the full 50-episode show against moments real people chose")
+    st.caption("Rivals A and B are public solutions to the same assignment; their published 50-episode rankings "
+               "were scored with the same evaluator.")
     st.markdown("""
 <table class="cc-proof">
-<tr><th>Answer key</th><th>Who picked the moments</th><th>Keyword rules</th><th>CliffCut</th></tr>
-<tr><td>8 promos marked blind</td><td>hand-marked before seeing output</td><td>1 / 8</td><td><b>8 / 8</b></td></tr>
-<tr><td>Kuku's own episode titles</td><td>Kuku editors</td><td>20 / 45</td><td><b>42 / 45</b></td></tr>
-<tr><td>Real YouTube Shorts promos of the show</td><td>clippers + real audiences</td><td>10 / 21</td><td><b>21 / 21</b></td></tr>
-<tr><td>Same, weighted by views</td><td>real audiences</td><td>27%</td><td><b>100%</b></td></tr>
+<tr><th>Answer key (found / in the episode's #1 pick)</th><th>Keyword rules</th><th>Rival A</th><th>Rival B</th><th>CliffCut</th></tr>
+<tr><td>8 promos marked blind</td><td>1 / 1</td><td>4 / 4</td><td>1 / 1</td><td><b>8 / 5</b></td></tr>
+<tr><td>Kuku's own episode titles (of 45)</td><td>20 / 19</td><td>34 / 28</td><td>9 / 8</td><td><b>41 / 29</b></td></tr>
+<tr><td>Real YouTube Shorts promos of the show (of 21)</td><td>10 / 8</td><td>21 / 17</td><td>8 / 8</td><td><b>21 / 19</b></td></tr>
 </table>""", unsafe_allow_html=True)
     st.markdown("&nbsp;")
     st.markdown("**Paid ads agree.** 20 Meta Ad Library creatives for the show open most often on the episode-18 fire "
-                "and the episode-3 wedding expulsion: the #1 picks of CliffCut's two main configurations.")
+                "and the episode-3 wedding expulsion. CliffCut ranks the episode-3 rescue #1 and the episode-18 fire #4.")
     p = Path("eval/meta_ads.csv")
     if p.exists():
         rows = [r for r in csv.DictReader(open(p)) if r["show_on_screen"]]

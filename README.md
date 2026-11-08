@@ -25,14 +25,16 @@ episodes/*.txt ─► 1 parse (code) ─► 2 find (LLM) ─► 3 check (code) �
 
 Three answer keys nobody tuned on (`eval/`):
 
-| Answer key | Keyword baseline | CliffCut (default) |
-|---|---|---|
-| 8 promos marked blind (card IDs) | 1/8 | **8/8** |
-| Kuku's own episode titles: titled moment inside a pick | 20/45 | **42/45** |
-| 21 real YouTube Shorts promos of the show (by transcript) | 10/21 | **21/21** (100% of views) |
+| Answer key (found / in the episode's #1 pick) | Keyword baseline | Rival A | Rival B | CliffCut (default) |
+|---|---|---|---|---|
+| 8 promos marked blind (card IDs) | 1 / 1 | 4 / 4 | 1 / 1 | **8 / 5** |
+| Kuku's own episode titles (of 45) | 20 / 19 | 34 / 28 | 9 / 8 | **41 / 29** |
+| 21 real YouTube Shorts promos of the show | 10 / 8 | 21 / 17 | 8 / 8 | **21 / 19** |
+
+Rivals A and B: two public solutions to the same assignment, scored from their published 50-episode rankings.
 
 Plus 20 paid Meta Ad Library creatives for the show (`eval/meta_ads.csv`): their most-used openings
-(episode-18 fire, episode-3 wedding expulsion) are the #1 picks of our DeepSeek-only and default runs.
+(episode-18 fire, episode-3 wedding expulsion) are CliffCut's #4 and #1.
 
 Scoring: `python -m promo_finder.evaluate`, `python -m promo_finder.eval_titles`, `python -m promo_finder.eval_real`.
 
