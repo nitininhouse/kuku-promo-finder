@@ -37,6 +37,13 @@ Return JSON only: {{"winners": [{{"pair": 1, "winner": "A" or "B"}}, ...]}}"""
 
 
 def _llm_pairs(pairs: list[tuple[dict, dict]], cfg: dict) -> list[float]:
+    try:
+        return _llm_pairs_once(pairs, cfg)
+    except Exception:  # a failed call counts as ties, not a crash
+        return [0.5] * len(pairs)
+
+
+def _llm_pairs_once(pairs: list[tuple[dict, dict]], cfg: dict) -> list[float]:
     body = "\n\n".join(f"##### PAIR {i + 1}\n--- CLIP A ---\n{a['text']}\n--- CLIP B ---\n{b['text']}"
                        for i, (a, b) in enumerate(pairs))
     res = call_model(LLM_PAIRS.format(pairs=body), None, cfg, system="You are a strict promo editor.")

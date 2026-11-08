@@ -108,14 +108,17 @@ def llm_scores(cands: list[dict], cfg: dict, batch: int = 6) -> dict[str, dict]:
         clips = "\n\n".join(f"=== CLIP {c['cid']} ({c['duration']}s) ===\n{c['text']}\n"
                             f"--- after the cut, NOT shown in the clip (use only for cliffhanger) ---\n"
                             f"{c.get('after_cut', '')}" for c in part)
-        return call_model(LLM_JUDGE.format(rubric=rubric, types=", ".join(HOOK_TYPES), clips=clips),
-                          None, cfg, system="You are a strict promo editor.")
+        try:
+            return call_model(LLM_JUDGE.format(rubric=rubric, types=", ".join(HOOK_TYPES), clips=clips),
+                              None, cfg, system="You are a strict promo editor.")
+        except Exception as e:  # one failed batch should not sink the run: those clips fall back
+            return {"json": {"scores": []}, "error": str(e)}
 
     out = {}
     parts = [cands[i:i + batch] for i in range(0, len(cands), batch)]
     with ThreadPoolExecutor(cfg.get("workers", 8)) as pool:
         for res in pool.map(one, parts):
-            for s in res["json"].get("scores", []):
+            for s in (res["json"] or {}).get("scores", []):
                 out[s.get("cid")] = {"judge": res.get("model", "llm"), "hook_type": s.get("hook_type", ""),
                                      "judge_reason": s.get("reason", ""),
                                      **{k: float(s.get(k, 0)) for k in RUBRIC}}

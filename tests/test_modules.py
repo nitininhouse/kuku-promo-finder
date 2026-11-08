@@ -337,3 +337,19 @@ def test_report_escapes_html(tmp_path):
     c.update(rank=1, score=50.0, scores={"hook": 2}, rank_reason="r")
     page = write_html([c], [], {"episodes": 1}, tmp_path).read_text()
     assert "<script>alert" not in page and "&lt;script&gt;" in page
+
+
+def test_failed_judge_batch_falls_back_instead_of_crashing(monkeypatch):
+    def boom(*a, **k):
+        raise models.ModelError("429 balance")
+    monkeypatch.setattr(score, "call_model", boom)
+    c = CHK.check(cand())
+    score.score_all([c], {"judge": "llm", "llm": {"model": "x"}}, log=lambda m: None)
+    assert c["scores"]["judge"] == "heuristic" and c["score"] > 0
+
+
+def test_failed_pair_call_counts_as_tie(monkeypatch):
+    def boom(*a, **k):
+        raise models.ModelError("timeout")
+    monkeypatch.setattr(tournament, "call_model", boom)
+    assert tournament._llm_pairs([({"text": "a"}, {"text": "b"})], {}) == [0.5]

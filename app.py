@@ -88,9 +88,29 @@ def secret(name: str) -> str:
 
 with st.sidebar:
     st.markdown("### ⚙️ Engine")
-    mode = st.radio("Mode", ["Free (no key)", "AI (bring your key)"],
-                    help="Free mode uses keyword rules only, so you can see the flow without any API key.")
-    if mode.startswith("Free"):
+    mode = st.radio("Mode", ["Reviewer (access code)", "Free (no key)", "AI (bring your key)"],
+                    help="Reviewers get the full AI pipeline with the owner's keys, which never leave the server. "
+                         "Free mode uses keyword rules only.")
+    if mode.startswith("Reviewer"):
+        code = st.text_input("Access code", type="password", help="Given in the submission doc")
+        ok = bool(secret("ACCESS_CODE")) and code == secret("ACCESS_CODE")
+        if ok:
+            # keys are read here, on the server; they are never put into a widget or sent to the browser
+            cfg["finder"] = {"provider": "gemini", "model": "gemini-3.8-flash",
+                             "api_key": secret("GEMINI_API_KEY"), "workers": 6}
+            judge_cfg = {"provider": "gemini", "model": "gemini-3.8-flash", "api_key": secret("GEMINI_API_KEY"),
+                         "workers": 6}
+            if secret("DEEPSEEK_API_KEY"):  # a judge from another model family when available
+                judge_cfg = {"provider": "deepseek", "model": "deepseek-flash",
+                             "api_key": secret("DEEPSEEK_API_KEY"), "workers": 4}
+            cfg["scorer"].update(judge="llm", llm=judge_cfg)
+            st.success(f"Full AI pipeline: Gemini finds, {judge_cfg['provider'].title()} judges.")
+        else:
+            if code:
+                st.error("Wrong code. Running free mode.")
+            cfg["finder"] = {"provider": "baseline"}
+            cfg["scorer"]["judge"] = "heuristic"
+    elif mode.startswith("Free"):
         cfg["finder"] = {"provider": "baseline"}
         cfg["scorer"]["judge"] = "heuristic"
     else:
@@ -100,23 +120,20 @@ with st.sidebar:
         with st.expander("Finder settings", expanded=True):
             model = st.text_input("Model", p["model"])
             base_url = st.text_input("Base URL", p["base_url"], help="Any OpenAI-compatible endpoint works")
-            key = st.text_input(f"API key", type="password", value=secret(p["key_env"]) if p["key_env"] else "",
-                                placeholder=p["key_env"] or "not needed")
+            key = st.text_input("API key", type="password", placeholder=p["key_env"] or "not needed")
         cfg["finder"] = {"provider": provider, "model": model, "base_url": base_url, "api_key": key, "workers": 4}
         judge = st.selectbox("Judge", ["Different model (recommended)", "Same model as finder", "TypeSafe Jev"])
         if judge.startswith("Different"):
             jp = st.selectbox("Judge model", [n for n in names if n != provider])
             with st.expander("Judge settings", expanded=True):
                 jm = st.text_input("Judge model name", PRESETS[jp]["model"])
-                jk = st.text_input("Judge API key", type="password", value=secret(PRESETS[jp]["key_env"]),
-                                   placeholder=PRESETS[jp]["key_env"])
+                jk = st.text_input("Judge API key", type="password", placeholder=PRESETS[jp]["key_env"])
             cfg["scorer"].update(judge="llm", llm={"provider": jp, "model": jm, "api_key": jk, "workers": 4})
         elif judge.startswith("Same"):
             cfg["scorer"].update(judge="llm", llm=cfg["finder"])
         else:
-            cfg["scorer"].update(judge="jev", api_key=st.text_input("TypeSafe API key", type="password",
-                                                                    value=secret("TYPESAFE_API_KEY")))
-    st.caption("🔒 Keys live only in this browser session. Nothing is stored.")
+            cfg["scorer"].update(judge="jev", api_key=st.text_input("TypeSafe API key", type="password"))
+    st.caption("🔒 Your own keys live only in this browser session. Reviewer keys stay on the server.")
     st.divider()
     cfg["candidates_per_episode"] = st.slider("Candidates per episode", 1, 8, cfg["candidates_per_episode"])
 
