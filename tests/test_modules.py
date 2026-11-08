@@ -353,3 +353,9 @@ def test_failed_pair_call_counts_as_tie(monkeypatch):
         raise models.ModelError("timeout")
     monkeypatch.setattr(tournament, "call_model", boom)
     assert tournament._llm_pairs([({"text": "a"}, {"text": "b"})], {}) == [0.5]
+
+
+def test_lead_with_finder_pick_puts_each_episodes_p1_first():
+    ranked = [{"cid": "E02-P2"}, {"cid": "E01-P1"}, {"cid": "E01-P2"}, {"cid": "E02-P1"}, {"cid": "E01-P1-2"}]
+    out = [c["cid"] for c in pipeline.lead_with_finder_pick(ranked)]
+    assert out == ["E01-P1", "E02-P1", "E02-P2", "E01-P2", "E01-P1-2"] and ranked[0]["rank"] == 3

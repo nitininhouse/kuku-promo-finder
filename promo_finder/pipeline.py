@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -62,6 +63,18 @@ def rank(cands: list[dict], per_episode: int = 2, early_bonus: bool = True) -> l
                             + (f"; won {c['pairwise']:.0f}/100 head-to-head" if "pairwise" in c else "")
                             + (f"; flags: {len(c['flags'])}" if c["flags"] else ""))
     return order
+
+
+def lead_with_finder_pick(ranked: list[dict]) -> list[dict]:
+    """The finder read the whole episode and listed its picks best-first; the judge saw each clip alone.
+    So each episode's top slot goes to the primary finder's own #1 pick (cid E07-P1), and the judge's
+    order decides everything else: which episodes come first, and the remaining picks."""
+    leads = [c for c in ranked if re.fullmatch(r"E\d+-P1", c.get("cid") or "")]
+    rest = [c for c in ranked if c not in leads]
+    out = leads + rest
+    for i, c in enumerate(out, 1):
+        c["rank"] = i
+    return out
 
 
 def run(episodes: list[Episode], cfg: dict, out_dir: Path, log=print) -> dict:
@@ -161,6 +174,8 @@ def run(episodes: list[Episode], cfg: dict, out_dir: Path, log=print) -> dict:
         ranked = top + ranked[k:]
         for i, c in enumerate(ranked, 1):
             c["rank"] = i
+    if cfg.get("lead_with_finder_pick", True):
+        ranked = lead_with_finder_pick(ranked)
     write_outputs(ranked, out_dir)
 
     usage = [f.get("usage") or {} for f in found]

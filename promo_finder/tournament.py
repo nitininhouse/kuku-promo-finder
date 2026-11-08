@@ -102,8 +102,10 @@ def tournament(ranked: list[dict], judge: str, cfg: dict, k: int = 24, rounds: i
             seen.add((min(i, j), max(i, j)))
             pairs.append((i, j))
         # ask every pair in both orders; a verdict that flips with the order counts as a tie
-        fwd = judge_pairs([(top[a], top[b]) for a, b in pairs], judge, cfg)
-        rev = judge_pairs([(top[b], top[a]) for a, b in pairs], judge, cfg)
+        with ThreadPoolExecutor(2) as both:  # ask both orders at once: same verdicts, half the wait
+            f_fwd = both.submit(judge_pairs, [(top[a], top[b]) for a, b in pairs], judge, cfg)
+            f_rev = both.submit(judge_pairs, [(top[b], top[a]) for a, b in pairs], judge, cfg)
+            fwd, rev = f_fwd.result(), f_rev.result()
         for (a, b), p, q in zip(pairs, fwd, rev):
             asked += 1
             first_wins = (p > 0.5) and (q > 0.5) or (p < 0.5) and (q < 0.5)

@@ -77,6 +77,7 @@ st.markdown("""
 cfg = tomllib.loads(Path("config.toml").read_text())
 cfg.pop("extra_finders", None)  # the app runs one finder and one judge; the CLI config can pool several
 cfg["scorer"].pop("panel", None)
+cfg["tournament"] = {"k": 16, "rounds": 3}  # the web app trades a little ranking depth for speed
 
 
 MAX_SHARED_EPS = 10  # cap per run when the owner's keys are used, so a public link can't drain them
