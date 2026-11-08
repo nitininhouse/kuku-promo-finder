@@ -35,7 +35,7 @@ workers = 8
 [[scorer.panel]]
 provider = "deepseek"
 model = "deepseek-flash"
-workers = 8
+workers = 4
 
 [scorer.llm]             # judge model for judge = "llm"; keep it a different family from the finder
 provider = "gemini"

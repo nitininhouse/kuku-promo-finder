@@ -79,6 +79,9 @@ cfg.pop("extra_finders", None)  # the app runs one finder and one judge; the CLI
 cfg["scorer"].pop("panel", None)
 
 
+MAX_SHARED_EPS = 10  # cap per run when the owner's keys are used, so a public link can't drain them
+
+
 def secret(name: str) -> str:
     try:
         return st.secrets.get(name, "")
@@ -88,28 +91,20 @@ def secret(name: str) -> str:
 
 with st.sidebar:
     st.markdown("### ⚙️ Engine")
-    mode = st.radio("Mode", ["Reviewer (access code)", "Free (no key)", "AI (bring your key)"],
-                    help="Reviewers get the full AI pipeline with the owner's keys, which never leave the server. "
-                         "Free mode uses keyword rules only.")
-    if mode.startswith("Reviewer"):
-        code = st.text_input("Access code", type="password", help="Given in the submission doc")
-        ok = bool(secret("ACCESS_CODE")) and code == secret("ACCESS_CODE")
-        if ok:
-            # keys are read here, on the server; they are never put into a widget or sent to the browser
-            cfg["finder"] = {"provider": "gemini", "model": "gemini-3.8-flash",
-                             "api_key": secret("GEMINI_API_KEY"), "workers": 6}
-            judge_cfg = {"provider": "gemini", "model": "gemini-3.8-flash", "api_key": secret("GEMINI_API_KEY"),
-                         "workers": 6}
-            if secret("DEEPSEEK_API_KEY"):  # a judge from another model family when available
-                judge_cfg = {"provider": "deepseek", "model": "deepseek-flash",
-                             "api_key": secret("DEEPSEEK_API_KEY"), "workers": 4}
-            cfg["scorer"].update(judge="llm", llm=judge_cfg)
-            st.success(f"Full AI pipeline: Gemini finds, {judge_cfg['provider'].title()} judges.")
-        else:
-            if code:
-                st.error("Wrong code. Running free mode.")
-            cfg["finder"] = {"provider": "baseline"}
-            cfg["scorer"]["judge"] = "heuristic"
+    has_keys = bool(secret("GEMINI_API_KEY"))
+    modes = (["AI (ready to use)"] if has_keys else []) + ["Free (no key)", "AI (bring your key)"]
+    mode = st.radio("Mode", modes, help="AI (ready to use) runs the full pipeline on the owner's keys, which stay on "
+                                         "the server. Free mode uses keyword rules only.")
+    if mode.startswith("AI (ready"):
+        cfg["finder"] = {"provider": "gemini", "model": "gemini-3.8-flash",
+                         "api_key": secret("GEMINI_API_KEY"), "workers": 6}
+        judge_cfg = {"provider": "gemini", "model": "gemini-3.8-flash", "api_key": secret("GEMINI_API_KEY"),
+                     "workers": 6}
+        if secret("DEEPSEEK_API_KEY"):  # a judge from another model family when available
+            judge_cfg = {"provider": "deepseek", "model": "deepseek-flash",
+                         "api_key": secret("DEEPSEEK_API_KEY"), "workers": 4}
+        cfg["scorer"].update(judge="llm", llm=judge_cfg)
+        st.success(f"Gemini finds, {judge_cfg['provider'].title()} judges. Up to {MAX_SHARED_EPS} episodes per run.")
     elif mode.startswith("Free"):
         cfg["finder"] = {"provider": "baseline"}
         cfg["scorer"]["judge"] = "heuristic"
@@ -133,7 +128,7 @@ with st.sidebar:
             cfg["scorer"].update(judge="llm", llm=cfg["finder"])
         else:
             cfg["scorer"].update(judge="jev", api_key=st.text_input("TypeSafe API key", type="password"))
-    st.caption("🔒 Your own keys live only in this browser session. Reviewer keys stay on the server.")
+    st.caption("🔒 Keys never reach the browser: the owner's stay on the server, yours stay in this session.")
     st.divider()
     cfg["candidates_per_episode"] = st.slider("Candidates per episode", 1, 8, cfg["candidates_per_episode"])
 
@@ -164,7 +159,11 @@ if eps:
     if st.button("✂️  Find promos", type="primary", use_container_width=False):
         out = Path(tempfile.mkdtemp()) / time.strftime("%Y%m%d-%H%M%S")
         with st.status("Cutting...", expanded=True) as status:
-            st.session_state.result = run([e for e in eps if lo <= e.ep <= hi], cfg, out, log=st.write)
+            chosen = [e for e in eps if lo <= e.ep <= hi]
+            if mode.startswith("AI (ready") and len(chosen) > MAX_SHARED_EPS:
+                st.write(f"Shared keys: running the first {MAX_SHARED_EPS} of {len(chosen)} episodes.")
+                chosen = chosen[:MAX_SHARED_EPS]
+            st.session_state.result = run(chosen, cfg, out, log=st.write)
             st.session_state.out = out
             st.session_state.n_eps = (lo, hi)
             status.update(label="Done", state="complete", expanded=False)
