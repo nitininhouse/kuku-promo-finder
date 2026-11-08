@@ -1,0 +1,86 @@
+EPISODE NUMBER: Episode 1
+EPISODE LOGLINE: Waitress Mara is accused of stealing a ring at a gala, until a stranger in the crowd claims she is his wife.
+CONTINUITY NOTES: Original sample written for testing. Not from any real show.
+
+--- SCRIPT START ---
+
+SCENE 01
+Scene heading: INT. HOTEL BALLROOM – NIGHT
+Scene start: 00:00.00
+Scene end: 00:52.00
+
+Actions and dialogue:
+
+**CAMERA:**
+Start: (00:00.00) | End: (00:04.00)
+Wide establishing shot of a glittering ballroom, guests in evening wear.
+
+**ACTION:**
+Start: (00:04.00) | End: (00:06.00)
+Mara carries a tray of champagne through the crowd.
+
+**SOUND FX:**
+Start: (00:06.00) | End: (00:07.00)
+A sharp crack as a hand slaps Mara across the face; glasses shatter on the marble.
+
+**VIVIAN (Furious):**
+Start: (00:07.00) | End: (00:09.50)
+"You filthy thief! Where is my diamond ring?"
+
+**MARA (Stunned):**
+Start: (00:10.00) | End: (00:12.00)
+"I never touched your ring, ma'am."
+
+**CAMERA:**
+Start: (00:12.00) | End: (00:15.00)
+Close-up on Mara's reddened cheek as guests gather and whisper.
+
+**VIVIAN (Cold):**
+Start: (00:15.00) | End: (00:18.50)
+"Search her. And call the police. Someone like her belongs in jail."
+
+**ACTION:**
+Start: (00:18.50) | End: (00:23.00)
+Two security guards grab Mara by the arms as she struggles.
+
+**MARA (Desperate):**
+Start: (00:23.00) | End: (00:26.00)
+"Please, I have a sick brother at home. I can't lose this job."
+
+**CAMERA:**
+Start: (00:26.00) | End: (00:30.00)
+Low angle on the ballroom doors swinging open. A tall man in a black suit steps in.
+
+**STRANGER (Calm, Dangerous):**
+Start: (00:30.00) | End: (00:33.00)
+"Let go of her. Right now."
+
+**VIVIAN (Mocking):**
+Start: (00:33.00) | End: (00:36.00)
+"And who are you to give orders here? Her boyfriend?"
+
+**CAMERA:**
+Start: (00:36.00) | End: (00:40.00)
+Slow push-in on the Stranger as he takes off his gloves, eyes never leaving Vivian.
+
+**STRANGER (Quiet):**
+Start: (00:40.00) | End: (00:43.00)
+"No. I'm her husband. And I own this hotel."
+
+**CAMERA:**
+Start: (00:43.00) | End: (00:46.00)
+Close-up on Mara, utterly confused: she has never seen this man before.
+
+**MARA (Whispering):**
+Start: (00:46.00) | End: (00:48.00)
+"Husband? Who are you?"
+
+**SOUND FX:**
+Start: (00:48.00) | End: (00:50.00)
+Ominous low string sting.
+
+**CAMERA:**
+Start: (00:50.00) | End: (00:52.00)
+Cut to black.
+
+--- SCRIPT END ---

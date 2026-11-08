@@ -1,0 +1,44 @@
+# Swap the model here. provider: deepseek | gemini | groq | openrouter | ollama | anthropic | baseline
+# Any field overrides the preset, e.g. point base_url at another OpenAI-compatible API.
+candidates_per_episode = 5
+max_per_episode = 2      # in any 10 consecutive posts
+early_bonus = true       # promos from early episodes land viewers where the story starts
+
+[finder]
+provider = "deepseek"
+model = "deepseek-flash"
+# base_url = "https://my-gateway.example.com/v1"
+# key_env = "MY_KEY"
+temperature = 0.3
+workers = 8
+
+# Optional second finder: different models catch different moments (measured: Gemini finds
+# more of the real-ad moments, DeepSeek ranks better under a Gemini judge). Delete to use one.
+[[extra_finders]]
+provider = "gemini"
+model = "gemini-3.8-flash"
+temperature = 0.3
+workers = 8
+
+[scorer]
+judge = "llm"            # jev | llm | heuristic
+model = "jev-latest"     # used when judge = "jev"
+workers = 4
+
+[scorer.llm]             # judge model for judge = "llm"; keep it a different family from the finder
+provider = "gemini"
+model = "gemini-3.8-flash"
+workers = 8
+
+[tournament]
+k = 24       # pairwise re-rank of the top K; 0 turns it off
+rounds = 4
+
+[prices]     # USD per million tokens, for cost reporting only (DeepSeek V4.1 Flash peak, Jev 1.14)
+finder_in = 0.30
+finder_out = 1.20
+jev_in = 0.042
+
+[stitch]
+enabled = true   # cross-episode promos from the best single-episode clips
+pool = 30
