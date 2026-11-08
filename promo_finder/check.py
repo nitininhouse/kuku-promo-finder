@@ -124,14 +124,18 @@ class Checker:
                     out["repairs"].append(f"trimmed end to cliffhanger card ({tail:.1f}s of resolution cut)")
                     segs[-1][2] = j
 
-        # 4b. never cut inside a line: extend each segment over a line that is still being spoken
-        for seg in segs:
+        # 4b. never cut inside a line: extend each segment over a line that is still being spoken,
+        # or, if that line is long, pull the cut back to just before it starts
+        caps = {}
+        for k, seg in enumerate(segs):
             ep_cards = self.by_ep[seg[0]].cards
             end = max(c.end for c in self._span(*seg))
             while seg[2] + 1 < len(ep_cards) and ep_cards[seg[2] + 1].start < end - 0.3:
                 nxt = ep_cards[seg[2] + 1]
                 if nxt.kind == "DIALOGUE" and nxt.end - end > 4:
-                    break  # a long new line: better to stop before it than swallow it
+                    caps[k] = nxt.start  # a long new line: stop before it rather than swallow it
+                    out["repairs"].append(f"pulled the cut back to {fmt(nxt.start)}, before {nxt.id} starts")
+                    break
                 seg[2] += 1
                 if nxt.end > end:
                     out["repairs"].append(f"extended end over {nxt.id} to avoid a mid-line cut")
@@ -139,9 +143,10 @@ class Checker:
 
         # 5. timestamps from cards
         resolved, total, prev_end = [], 0.0, None
-        for ep, a, b in segs:
+        for k, (ep, a, b) in enumerate(segs):
             span = self._span(ep, a, b)
             st, en = min(c.start for c in span), max(c.end for c in span)
+            en = min(en, caps.get(k, en))
             if prev_end and prev_end[0] == ep and st < prev_end[1] - 0.05:
                 return reject("segments overlap or are out of order")
             prev_end = (ep, en)
@@ -153,7 +158,7 @@ class Checker:
             ids = {c.id for c in span}
             for c in self.by_ep[ep].cards:
                 if c.kind == "DIALOGUE" and c.id not in ids:
-                    if c.start < st - 0.3 < c.end or c.start < en - 0.3 < c.end:
+                    if (c.start < st - 0.3 and c.end > st + 0.3) or (c.start < en - 0.3 and c.end > en + 0.3):
                         out["flags"].append(f"cut lands inside line {c.id}")
         out["segments_resolved"] = resolved
         out["duration"] = round(total, 1)

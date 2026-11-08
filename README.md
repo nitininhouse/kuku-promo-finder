@@ -45,7 +45,7 @@ cp .env.example .env        # add DEEPSEEK_API_KEY (or GEMINI_API_KEY, ...) and 
 .venv/bin/python -m promo_finder show.zip --episodes 1-5 --provider gemini  # swap model from the CLI
 .venv/bin/python -m promo_finder show.zip --provider baseline --judge heuristic  # no key, no model
 .venv/bin/streamlit run app.py                                              # web UI
-.venv/bin/python -m pytest -q                                               # tests (synthetic show only)
+.venv/bin/python -m pytest -q                                               # 50 tests, synthetic data only, no network
 ```
 
 ## Swapping the model

@@ -144,6 +144,25 @@ def total(s: dict, c: dict) -> float:
     return round(max(0.0, base - pen), 1)
 
 
+def panel_scores(cands: list[dict], judges) -> dict[str, dict]:
+    """One judge config, or a list of them. A panel averages each rubric score across judges,
+    which cancels part of each model's own bias (and its preference for its own picks)."""
+    if isinstance(judges, dict):
+        return llm_scores(cands, judges)
+    runs = [llm_scores(cands, j) for j in judges]
+    out = {}
+    for c in cands:
+        got = [r[c["cid"]] for r in runs if c["cid"] in r]
+        if not got:
+            continue
+        avg = {k: round(sum(g[k] for g in got) / len(got), 2) for k in RUBRIC}
+        out[c["cid"]] = {"judge": "panel(" + "+".join(g["judge"] for g in got) + ")", **avg,
+                         "hook_type": got[0].get("hook_type", ""),
+                         "judge_reason": " | ".join(g.get("judge_reason", "") for g in got),
+                         "panel": {g["judge"]: {k: g[k] for k in RUBRIC} for g in got}}
+    return out
+
+
 def score_all(cands: list[dict], cfg: dict, log=print) -> list[dict]:
     judge = cfg.get("judge", "jev")
     if judge == "jev" and not (cfg.get("api_key") or os.environ.get("TYPESAFE_API_KEY")):
@@ -154,7 +173,7 @@ def score_all(cands: list[dict], cfg: dict, log=print) -> list[dict]:
             results = list(pool.map(lambda c: jev_score(c, cfg), cands))
         scores = {c["cid"]: s for c, s in zip(cands, results)}
     elif judge == "llm":
-        scores = llm_scores(cands, cfg["llm"])
+        scores = panel_scores(cands, cfg["llm"])
     else:
         scores = {c["cid"]: heuristic_score(c) for c in cands}
     for c in cands:

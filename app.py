@@ -75,7 +75,8 @@ st.markdown("""
 </div>""", unsafe_allow_html=True)
 
 cfg = tomllib.loads(Path("config.toml").read_text())
-cfg.pop("extra_finders", None)  # the app runs one finder; the CLI config can pool several
+cfg.pop("extra_finders", None)  # the app runs one finder and one judge; the CLI config can pool several
+cfg["scorer"].pop("panel", None)
 
 
 def secret(name: str) -> str:

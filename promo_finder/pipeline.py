@@ -14,6 +14,7 @@ from .check import Checker
 from .find import find_baseline, find_llm
 from .parse import Episode
 from .score import score_all
+from .report import write_html
 from .stitch import stitch
 from .tournament import tournament
 
@@ -70,7 +71,7 @@ def run(episodes: list[Episode], cfg: dict, out_dir: Path, log=print) -> dict:
     finder = cfg["finder"]
     n = cfg.get("candidates_per_episode", 5)
     # the judge should come from a different model family than the finder (self-preference bias)
-    judge_llm = cfg["scorer"].get("llm") or finder
+    judge_llm = cfg["scorer"].get("panel") or cfg["scorer"].get("llm") or finder
 
     def find(ep: Episode) -> dict:
         if finder.get("provider") == "baseline":
@@ -178,7 +179,9 @@ def run(episodes: list[Episode], cfg: dict, out_dir: Path, log=print) -> dict:
         meta["finder_cost_usd"] = round(meta["finder_tokens_in"] / 1e6 * price.get("finder_in", 0)
                                         + meta["finder_tokens_out"] / 1e6 * price.get("finder_out", 0), 4)
         meta["judge_cost_usd"] = round(meta["judge_tokens_in"] / 1e6 * price.get("jev_in", 0.042), 4)
+    meta["judge_name"] = (good[0]["scores"].get("judge", "") if good else "")
     (out_dir / "run_meta.json").write_text(json.dumps(meta, indent=2))
+    write_html(ranked, bad, meta, out_dir)
     log(f"Done in {meta['seconds']}s -> {out_dir}")
     return {"ranked": ranked, "rejected": bad, "meta": meta}
 

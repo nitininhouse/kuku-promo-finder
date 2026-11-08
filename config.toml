@@ -25,6 +25,18 @@ judge = "llm"            # jev | llm | heuristic
 model = "jev-latest"     # used when judge = "jev"
 workers = 4
 
+# A panel of judges from different model families; their scores are averaged.
+# Remove the [[scorer.panel]] blocks to use the single [scorer.llm] judge below.
+[[scorer.panel]]
+provider = "gemini"
+model = "gemini-3.8-flash"
+workers = 8
+
+[[scorer.panel]]
+provider = "deepseek"
+model = "deepseek-flash"
+workers = 8
+
 [scorer.llm]             # judge model for judge = "llm"; keep it a different family from the finder
 provider = "gemini"
 model = "gemini-3.8-flash"

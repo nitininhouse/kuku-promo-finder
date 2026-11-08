@@ -49,9 +49,13 @@ def judge_pairs(pairs, judge: str, cfg: dict) -> list[float]:
     if judge == "jev":
         key = cfg.get("api_key") or os.environ.get("TYPESAFE_API_KEY", "")
         return [_jev_pair(a, b, key) for a, b in pairs]
+    judges = cfg["llm"] if isinstance(cfg["llm"], list) else [cfg["llm"]]
     chunks = [pairs[i:i + 6] for i in range(0, len(pairs), 6)]
+    per_judge = []
     with ThreadPoolExecutor(8) as pool:
-        return [p for res in pool.map(lambda ch: _llm_pairs(ch, cfg["llm"]), chunks) for p in res]
+        for j in judges:  # a panel averages P(A wins) across judges
+            per_judge.append([p for res in pool.map(lambda ch: _llm_pairs(ch, j), chunks) for p in res])
+    return [sum(ps) / len(ps) for ps in zip(*per_judge)]
 
 
 def bradley_terry(n: int, games: list[tuple[int, int, float]], iters: int = 200) -> list[float]:
@@ -80,7 +84,7 @@ def tournament(ranked: list[dict], judge: str, cfg: dict, k: int = 24, rounds: i
         return {"skipped": True}
     strength = [c["score"] for c in top]
     games, seen = [], set()
-    flips = asked = 0
+    flips = asked = first_won = 0
     for r in range(rounds):
         order = sorted(range(n), key=lambda i: -strength[i])
         pairs = []
@@ -97,6 +101,7 @@ def tournament(ranked: list[dict], judge: str, cfg: dict, k: int = 24, rounds: i
             asked += 1
             first_wins = (p > 0.5) and (q > 0.5) or (p < 0.5) and (q < 0.5)
             flips += first_wins
+            first_won += (p > 0.5) + (q > 0.5)
             games.append((a, b, (p + (1 - q)) / 2))
         strength = bradley_terry(n, games)
         log(f"  tournament round {r + 1}/{rounds}: {len(pairs)} pairs x 2 orders")
@@ -107,6 +112,7 @@ def tournament(ranked: list[dict], judge: str, cfg: dict, k: int = 24, rounds: i
         c["abs_score"] = c["score"]
         c["pairwise"] = round(100 * (s - lo) / (hi - lo or 1), 1)
         c["score"] = round(0.7 * c["pairwise"] + 0.3 * c["abs_score"], 1)
-    stats = {"clips": n, "pairs": len(games), "order_flip_rate": round(flip_rate, 2), "judge": judge}
+    stats = {"clips": n, "pairs": len(games), "order_flip_rate": round(flip_rate, 2),
+             "first_shown_win_rate": round(first_won / max(1, 2 * asked), 2), "judge": judge}
     log(f"  tournament: {flip_rate:.0%} of verdicts flipped with A/B order (counted as ties)")
     return stats
